@@ -1,0 +1,73 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: fullstack-app
+
+  # ─── Database (H2 in-memory — switch to MySQL for production) ──────────────
+  datasource:
+    url: jdbc:h2:mem:appdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # MySQL example (comment out H2 and uncomment this):
+  # datasource:
+  #   url: jdbc:mysql://localhost:3306/appdb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+  #   driver-class-name: com.mysql.cj.jdbc.Driver
+  #   username: ${DB_USERNAME:root}
+  #   password: ${DB_PASSWORD:root}
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop   # Use 'update' or 'validate' for MySQL prod
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        # dialect: org.hibernate.dialect.MySQL8Dialect  # for MySQL
+        format_sql: true
+
+  # ─── OAuth2 / Google SSO ───────────────────────────────────────────────────
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:YOUR_GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET:YOUR_GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+# ─── JWT Settings ─────────────────────────────────────────────────────────────
+jwt:
+  secret: ${JWT_SECRET:MyVerySecretKeyForJWTTokenGenerationThatIsAtLeast256BitsLong!}
+  expiration: 86400000   # 24 hours in milliseconds
+  refresh-expiration: 604800000  # 7 days
+
+# ─── Frontend URL (used for CORS and OAuth redirects) ─────────────────────────
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  oauth2:
+    authorized-redirect-uris:
+      - http://localhost:3000/oauth2/redirect
+
+# ─── Logging ──────────────────────────────────────────────────────────────────
+logging:
+  level:
+    com.app: DEBUG
+    org.springframework.security: INFO
